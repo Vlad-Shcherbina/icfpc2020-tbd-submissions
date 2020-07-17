@@ -29,7 +29,7 @@ index 07e6243..0000000
 -but should be safe to delete at any time (they should be regenerated if needed).
 -It's in gitignore.
 diff --git a/ops/make_submission_local.py b/ops/make_submission_local.py
-index f1c87cd..733d260 100644
+index f1c87cd..a227f2c 100644
 --- a/ops/make_submission_local.py
 +++ b/ops/make_submission_local.py
 @@ -100,6 +100,17 @@ def main():
@@ -43,7 +43,7 @@ index f1c87cd..733d260 100644
 +        cwd=project_root, universal_newlines=True)
 +    provenance += '\n\n### Local changes on top of this base commit\n\n'
 +    provenance += subprocess.check_output(
-+        ['git', 'diff', 'HEAD', '--ignore-space-at-eol'],
++        ['git', 'diff', 'HEAD', '--ignore-space-at-eol', '--ignore-cr-at-eol'],
 +        cwd=project_root, universal_newlines=True)
 +    (sub_repo / 'provenance.txt').write_text(provenance)
 +
