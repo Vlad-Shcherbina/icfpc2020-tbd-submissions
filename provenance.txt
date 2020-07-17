@@ -3,68 +3,26 @@ cargo build -p tbd --bin example_submission --release
 
 
 ### Base commit
-ed09e30
-make_submission_remote troubleshooting guide
+5b720c8
+Record submission provenance in the submission repo
 Vlad Shcherbina
-Fri Jul 17 15:06:04 2020 +0300
+Fri Jul 17 15:33:36 2020 +0300
 
 
 ### Local changes on top of this base commit
 
-diff --git a/cache/.gitignore b/cache/.gitignore
-deleted file mode 100644
-index f59ec20..0000000
---- a/cache/.gitignore
-+++ /dev/null
-@@ -1 +0,0 @@
--*
-\ No newline at end of file
-diff --git a/cache/README.md b/cache/README.md
-deleted file mode 100644
-index 07e6243..0000000
---- a/cache/README.md
-+++ /dev/null
-@@ -1,3 +0,0 @@
--This directory is for generated files that could be helpful to have around,
--but should be safe to delete at any time (they should be regenerated if needed).
--It's in gitignore.
 diff --git a/ops/make_submission_local.py b/ops/make_submission_local.py
-index f1c87cd..a227f2c 100644
+index a227f2c..f22d407 100644
 --- a/ops/make_submission_local.py
 +++ b/ops/make_submission_local.py
-@@ -100,6 +100,17 @@ def main():
- RUST_BACKTRACE=1 ./a.out "$@"
- ''')
+@@ -107,7 +107,9 @@ RUST_BACKTRACE=1 ./a.out "$@"
+         cwd=project_root, universal_newlines=True)
+     provenance += '\n\n### Local changes on top of this base commit\n\n'
+     provenance += subprocess.check_output(
+-        ['git', 'diff', 'HEAD', '--ignore-space-at-eol', '--ignore-cr-at-eol'],
++        ['git', 'diff', 'HEAD', '--ignore-space-at-eol', '--ignore-cr-at-eol',
++         '--diff-filter=d',  # ignore deleted files to avoid noise caused by rsync and gitignore interaction
++         ],
+         cwd=project_root, universal_newlines=True)
+     (sub_repo / 'provenance.txt').write_text(provenance)
  
-+    provenance = f'### Binary\ncargo build -p {package} --bin {binary} --release\n'
-+    provenance += '\n\n### Base commit\n'
-+    provenance += subprocess.check_output(
-+        ['git', 'log', '-1', "--pretty=%C(auto)%h\n%s\n%an\n%ad", '--abbrev-commit'],
-+        cwd=project_root, universal_newlines=True)
-+    provenance += '\n\n### Local changes on top of this base commit\n\n'
-+    provenance += subprocess.check_output(
-+        ['git', 'diff', 'HEAD', '--ignore-space-at-eol', '--ignore-cr-at-eol'],
-+        cwd=project_root, universal_newlines=True)
-+    (sub_repo / 'provenance.txt').write_text(provenance)
-+
-     shutil.copy(
-         project_root / 'cache/target/release' / binary,
-         sub_repo / 'a.out')
-diff --git a/outputs/.gitignore b/outputs/.gitignore
-deleted file mode 100644
-index f59ec20..0000000
---- a/outputs/.gitignore
-+++ /dev/null
-@@ -1 +0,0 @@
--*
-\ No newline at end of file
-diff --git a/outputs/README.md b/outputs/README.md
-deleted file mode 100644
-index b8943c4..0000000
---- a/outputs/README.md
-+++ /dev/null
-@@ -1,4 +0,0 @@
--For logs, images rendered by visualizers, etc.
--In other word, stuff produced by machines for humans.
--
--Not under version control.
