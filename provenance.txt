@@ -1,12 +1,12 @@
 ### Binary
-cargo build -p tbd --bin example_submission --release
+cargo build -p manpages --bin my_script --release
 
 
 ### Base commit
-5f0c395
-Fix CRLF in repository key
-Vlad Shcherbina
-Fri Jul 17 16:04:13 2020 +0300
+b98996a
+png2txt: fixes to new image format, all new images
+caudate_julie
+Fri Jul 17 16:10:15 2020 +0300
 
 
 ### Local changes on top of this base commit
