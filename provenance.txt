@@ -1,5 +1,5 @@
 ### Binary
-cargo build -p tbd --bin example_submission
+cargo build -p tbd --bin example_submission --release
 
 
 ### Base commit
@@ -11,15 +11,6 @@ Fri Jul 17 15:06:04 2020 +0300
 
 ### Local changes on top of this base commit
 
-diff --git a/.cargo/config b/.cargo/config
-index a915b09..78f3177 100644
---- a/.cargo/config
-+++ b/.cargo/config
-@@ -1,2 +1,2 @@
--[build]
-+[build]
- target-dir = "cache/target"
-\ No newline at end of file
 diff --git a/cache/.gitignore b/cache/.gitignore
 deleted file mode 100644
 index f59ec20..0000000
@@ -38,21 +29,21 @@ index 07e6243..0000000
 -but should be safe to delete at any time (they should be regenerated if needed).
 -It's in gitignore.
 diff --git a/ops/make_submission_local.py b/ops/make_submission_local.py
-index f1c87cd..347e96c 100644
+index f1c87cd..733d260 100644
 --- a/ops/make_submission_local.py
 +++ b/ops/make_submission_local.py
 @@ -100,6 +100,17 @@ def main():
  RUST_BACKTRACE=1 ./a.out "$@"
  ''')
  
-+    provenance = f'### Binary\ncargo build -p {package} --bin {binary}\n'
++    provenance = f'### Binary\ncargo build -p {package} --bin {binary} --release\n'
 +    provenance += '\n\n### Base commit\n'
 +    provenance += subprocess.check_output(
 +        ['git', 'log', '-1', "--pretty=%C(auto)%h\n%s\n%an\n%ad", '--abbrev-commit'],
 +        cwd=project_root, universal_newlines=True)
 +    provenance += '\n\n### Local changes on top of this base commit\n\n'
 +    provenance += subprocess.check_output(
-+        ['git', 'diff', 'HEAD'],
++        ['git', 'diff', 'HEAD', '--ignore-space-at-eol'],
 +        cwd=project_root, universal_newlines=True)
 +    (sub_repo / 'provenance.txt').write_text(provenance)
 +
@@ -77,27 +68,3 @@ index b8943c4..0000000
 -In other word, stuff produced by machines for humans.
 -
 -Not under version control.
-diff --git a/scratches/username/src/bin/my_script.rs b/scratches/username/src/bin/my_script.rs
-index d4c5b2d..d865a4d 100644
---- a/scratches/username/src/bin/my_script.rs
-+++ b/scratches/username/src/bin/my_script.rs
-@@ -1,4 +1,4 @@
--fn main() {
--    tbd::hello();
--    println!("(from scratch)");
-+fn main() {
-+    tbd::hello();
-+    println!("(from scratch)");
- }
-\ No newline at end of file
-diff --git a/src/bin/hw.rs b/src/bin/hw.rs
-index 79c6f48..14784f1 100644
---- a/src/bin/hw.rs
-+++ b/src/bin/hw.rs
-@@ -1,3 +1,3 @@
--fn main() {
--    tbd::hello();
--}
-+fn main() {
-+    tbd::hello();
-+}
