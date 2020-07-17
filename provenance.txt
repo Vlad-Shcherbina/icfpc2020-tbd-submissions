@@ -1,12 +1,12 @@
 ### Binary
-cargo build -p tbd --bin example_submission --release
+cargo build -p tbd --bin squiggles_cli --release
 
 
 ### Base commit
-5f0c395
-Fix CRLF in repository key
-Vlad Shcherbina
-Fri Jul 17 16:04:13 2020 +0300
+105c280
+Add squiggles_cli, copy-paste powered version of squiggles to do one-shot calculations
+cognivore
+Fri Jul 17 23:22:05 2020 +0300
 
 
 ### Local changes on top of this base commit
