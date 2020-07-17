@@ -1,0 +1,13 @@
+### Binary
+cargo build -p tbd --bin example_submission --release
+
+
+### Base commit
+cab3e40
+Record submission provenance in the submission repo
+Vlad Shcherbina
+Fri Jul 17 15:33:36 2020 +0300
+
+
+### Local changes on top of this base commit
+
