@@ -12,7 +12,7 @@ Sun Jul 19 00:29:21 2020 +0300
 ### Local changes on top of this base commit
 
 diff --git a/src/bin/example_submission.rs b/src/bin/example_submission.rs
-index 24c7651..55b3225 100644
+index 24c7651..6cfeb2d 100644
 --- a/src/bin/example_submission.rs
 +++ b/src/bin/example_submission.rs
 @@ -1,23 +1,19 @@
@@ -30,7 +30,7 @@ index 24c7651..55b3225 100644
 -    let endpoint = &Endpoint::SubmissionServer { url: server_url };
 +    eprintln!("Server URL: {}", server_url);
 +    eprintln!("Player key: {}", player_key);
-+    let endpoint = Endpoint::SubmissionServer { url: format!("{}/aliens/send", server_url) };
++    let endpoint = Endpoint::SubmissionServer { server_url };
      let player_key: i128 = player_key.parse().unwrap();
  
 -    let mut state = Data::Nil;
@@ -46,10 +46,26 @@ index 24c7651..55b3225 100644
      // let resp = ureq::post(&server_url).send_string(player_key);
      // assert!(resp.ok(), "{:?}", resp);
 diff --git a/src/webapi.rs b/src/webapi.rs
-index fbe2380..163b829 100644
+index fbe2380..9f36cf6 100644
 --- a/src/webapi.rs
 +++ b/src/webapi.rs
-@@ -18,7 +18,7 @@ impl Endpoint {
+@@ -2,13 +2,13 @@
+ use crate::squiggle::*;
+ use crate::API_KEY;
+ 
+-const API_PROXY: &str = "https://icfpc2020-api.testkontur.ru/aliens/send";
++const API_PROXY: &str = "https://icfpc2020-api.testkontur.ru";
+ 
+ pub enum Endpoint {
+     NoComms,
+     Proxy,
+     SubmissionServer {
+-        url: String,
++        server_url: String,
+     },
+ }
+ 
+@@ -18,31 +18,31 @@ impl Endpoint {
          // convert to string
          let modulated = modulated.iter().map(|&x| x.to_string()).collect::<Vec<_>>().join("");
  
@@ -58,7 +74,19 @@ index fbe2380..163b829 100644
  
          let response = match self {
              Endpoint::NoComms => panic!(),
-@@ -35,14 +35,14 @@ impl Endpoint {
+             Endpoint::Proxy => {
+-                ureq::post(API_PROXY)
++                ureq::post(&format!("{}/aliens/send", API_PROXY))
+                     .query("apiKey", API_KEY)
+                     .send_string(&modulated)
+             }
+-            Endpoint::SubmissionServer { url } => {
+-                ureq::post(url)
++            Endpoint::SubmissionServer { server_url } => {
++                ureq::post(&format!("{}/aliens/send", server_url))
+                     .send_string(&modulated)
+             }
+         };
  
          if !response.ok() {
              // TODO: if there is rate limiting, do something about it.
