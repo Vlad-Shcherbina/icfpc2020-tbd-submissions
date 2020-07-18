@@ -3,311 +3,50 @@ cargo build -p tbd --bin example_submission --release
 
 
 ### Base commit
-60f8c26
-Include data/ dir in submission to allow loading galaxy there
+b8f84d1
+Generalize endpoints to allow connection to submission server
 Vlad Shcherbina
-Sat Jul 18 22:57:20 2020 +0300
+Sun Jul 19 00:29:21 2020 +0300
 
 
 ### Local changes on top of this base commit
 
-diff --git a/scratches/fj/src/bin/fj_test.rs b/scratches/fj/src/bin/fj_test.rs
-index ef154cd..eab98e8 100644
---- a/scratches/fj/src/bin/fj_test.rs
-+++ b/scratches/fj/src/bin/fj_test.rs
-@@ -1,9 +1,9 @@
- use tbd::ufolang::Protocol;
--use tbd::{squiggle::Data, ufolang::{eval_multidraw}, project_path, png_files::matrices_to_png};
-+use tbd::{squiggle::Data, ufolang::{eval_multidraw}, project_path, png_files::matrices_to_png, webapi::Endpoint};
- 
- fn main1() {
-     let protocol = Protocol::load_galaxy();
--    let result = protocol.interact(Data::Nil, Data::Number(0));
-+    let result = protocol.interact(Data::Nil, Data::Number(0), &Endpoint::Proxy);
-     let matrices = eval_multidraw(result.data_out_to_multipledraw);
-     matrices_to_png(&matrices, project_path("outputs/galaxyFJ"));
- }
-diff --git a/src/bin/ap_interact_galaxy.rs b/src/bin/ap_interact_galaxy.rs
-index 2770b83..fbb744a 100644
---- a/src/bin/ap_interact_galaxy.rs
-+++ b/src/bin/ap_interact_galaxy.rs
-@@ -1,11 +1,11 @@
- use tbd::ufolang::Protocol;
--use tbd::{squiggle::Data, ufolang::{eval_multidraw}, project_path, png_files::matrices_to_png};
-+use tbd::{squiggle::Data, ufolang::{eval_multidraw}, project_path, png_files::matrices_to_png, webapi::Endpoint};
- use std::io::BufRead;
- 
- #[allow(unused)]
- fn main_simple() {
-     let protocol = Protocol::load_galaxy();
--    let result = protocol.interact(Data::Nil, Data::make_cons(0, 0));
-+    let result = protocol.interact(Data::Nil, Data::make_cons(0, 0), &Endpoint::Proxy);
-     dbg!(&result.final_state);
-     dbg!(&result.data_out_to_multipledraw);
-     let matrices = eval_multidraw(result.data_out_to_multipledraw);
-@@ -30,7 +30,7 @@ fn main1() {
-         let x: i128 = 0; //it.next().unwrap().parse().unwrap();
-         let y: i128 = 0; //it.next().unwrap().parse().unwrap();
- 
--        let result = protocol.interact(state, Data::make_cons(x, y));
-+        let result = protocol.interact(state, Data::make_cons(x, y), &Endpoint::Proxy);
-         dbg!(&result.final_state);
-         dbg!(&result.data_out_to_multipledraw);
-         let matrices = eval_multidraw(result.data_out_to_multipledraw);
 diff --git a/src/bin/example_submission.rs b/src/bin/example_submission.rs
-index e1fbe37..24c7651 100644
+index 24c7651..8877253 100644
 --- a/src/bin/example_submission.rs
 +++ b/src/bin/example_submission.rs
-@@ -1,22 +1,31 @@
--use tbd::ufolang::Protocol;
-+use tbd::{webapi::Endpoint, ufolang::Protocol, squiggle::Data};
+@@ -1,7 +1,9 @@
+ use tbd::{webapi::Endpoint, ufolang::Protocol, squiggle::Data};
  
  fn main() {
-+    let protocol = Protocol::load_galaxy();
-+
+-    let protocol = Protocol::load_galaxy();
++    // do we even need headless galaxy,
++    // or could we get away with ufo-http-api?
++    let _protocol = Protocol::load_galaxy();
+ 
      let args: Vec<String> = std::env::args().collect();
      assert_eq!(args.len(), 3);
--    let server_url = &args[1];
-+    let server_url = args[1].clone();
+@@ -9,15 +11,17 @@ fn main() {
      let player_key = &args[2];
--
--    let _protocol = Protocol::load_galaxy();
--
      println!("Server URL: {}", server_url);
      println!("Player key: {}", player_key);
--    let resp = ureq::post(&server_url).send_string(player_key);
--    assert!(resp.ok(), "{:?}", resp);
--    println!("Response: {:?}", resp);
--    println!("Headers:");
--    for h in resp.headers_names() {
--        println!("  {}: {:?}", h, resp.header(&h).unwrap());
--    }
--    let body = resp.into_string().unwrap();
--    println!("Body: {:?}", body);
-+    let endpoint = &Endpoint::SubmissionServer { url: server_url };
-+    let player_key: i128 = player_key.parse().unwrap();
-+
-+    let mut state = Data::Nil;
-+
-+    // JOIN
-+    let data_in = Data::make_list3(2, player_key, Data::Nil);
-+    let result = protocol.interact(state, data_in, endpoint);
-+    dbg!(&result);
-+
-+    // let resp = ureq::post(&server_url).send_string(player_key);
-+    // assert!(resp.ok(), "{:?}", resp);
-+    // println!("Response: {:?}", resp);
-+    // println!("Headers:");
-+    // for h in resp.headers_names() {
-+    //     println!("  {}: {:?}", h, resp.header(&h).unwrap());
-+    // }
-+    // let body = resp.into_string().unwrap();
-+    // println!("Body: {:?}", body);
- }
-diff --git a/src/bin/explore_space.rs b/src/bin/explore_space.rs
-index 6c9d07d..33200cc 100644
---- a/src/bin/explore_space.rs
-+++ b/src/bin/explore_space.rs
-@@ -1,5 +1,5 @@
- use tbd::ufolang::Protocol;
--use tbd::{squiggle::Data, ufolang::{eval_multidraw, Value::*}, project_path, png_files::matrices_to_png};
-+use tbd::{squiggle::Data, ufolang::{eval_multidraw, Value::*}, project_path, png_files::matrices_to_png, webapi::Endpoint};
- use std::rc::Rc;
- use std::io::BufRead;
- use std::collections::HashSet;
-@@ -12,7 +12,7 @@ fn explore(protocol: &Protocol, seen: &mut HashSet<String>, state: Data) {
-     println!("i am in {:#?}", state);
-     for x in -10..10 {
-         for y in -10..10 {
--            let result = protocol.interact(state.clone(), Data::make_cons(x, y));
-+            let result = protocol.interact(state.clone(), Data::make_cons(x, y), &Endpoint::Proxy);
-             let result_state_str = result.final_state.to_string();
-             if !seen.contains(&result_state_str) {
-                 println!("{} -> {} {} -> {}", state_str, x, y, result_state_str);
-diff --git a/src/bin/interact.rs b/src/bin/interact.rs
-index 8a326f9..9016a26 100644
---- a/src/bin/interact.rs
-+++ b/src/bin/interact.rs
-@@ -1,5 +1,5 @@
- use std::io::{self, Write};
--use tbd::{squiggle::*, webapi::aliens_send};
-+use tbd::{squiggle::*, webapi::Endpoint};
+-    let endpoint = &Endpoint::SubmissionServer { url: server_url };
++    let endpoint = Endpoint::SubmissionServer { url: server_url };
+     let player_key: i128 = player_key.parse().unwrap();
  
- fn main() {
-     loop {
-@@ -18,7 +18,7 @@ fn main() {
-             }
-         };
+-    let mut state = Data::Nil;
++    let req = Data::make_list3(2, player_key, Data::Nil);
++    let resp = endpoint.aliens_send(req);
++    dbg!(resp);
  
--        let response = aliens_send(data);
-+        let response = Endpoint::Proxy.aliens_send(data);
-         println!("{}", response.to_string());
-     }
- }
-diff --git a/src/bin/web.rs b/src/bin/web.rs
-index 887f00c..5dc723f 100644
---- a/src/bin/web.rs
-+++ b/src/bin/web.rs
-@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
- use tokio::runtime::Builder;
- use tokio::time::delay_for;
- use std::time::Duration;
--use tbd::png_files::matrices_to_png;
-+use tbd::{webapi::Endpoint, png_files::matrices_to_png};
- use std::collections::hash_map::DefaultHasher;
- use std::hash::{Hash, Hasher};
+-    // JOIN
+-    let data_in = Data::make_list3(2, player_key, Data::Nil);
+-    let result = protocol.interact(state, data_in, endpoint);
+-    dbg!(&result);
++    // // JOIN
++    // let data_in = Data::make_list3(2, player_key, Data::Nil);
++    // let result = protocol.interact(state, data_in, endpoint);
++    // dbg!(&result);
  
-@@ -48,7 +48,7 @@ fn process_click(click: &ClickParams) -> ClickResponse {
-         None => return ClickResponse{state: String::from("error"), pretty_state: String::from("error"), pixels: vec![]}
-     };
- 
--    let result = protocol.interact(state, Data::make_cons(click.x, click.y));
-+    let result = protocol.interact(state, Data::make_cons(click.x, click.y), &Endpoint::Proxy);
-     // save_pics(&result);
- 
-     // let pixels = result.data_out_to_multipledraw.into_vec().iter().map(
-@@ -83,6 +83,7 @@ async fn server_main() {
- 
-     let routes = index.or(click);
- 
-+    println!("serving at http://127.0.0.1:22009 ...");
-     warp::serve(routes)
-         .run(([127, 0, 0, 1], 22009))
-         .await;
-diff --git a/src/ufolang.rs b/src/ufolang.rs
-index 9b6c729..e18d0de 100644
---- a/src/ufolang.rs
-+++ b/src/ufolang.rs
-@@ -1,7 +1,7 @@
- use crate::{project_path, tree::Tree};
- use std::{collections::HashMap, rc::Rc, convert::TryFrom, cell::RefCell};
- use crate::squiggle::Data;
--use crate::{webapi::aliens_send, img_matrix::*};
-+use crate::{webapi::Endpoint, img_matrix::*};
- 
- fn ap_to_none(s: &str) -> Option<&str> {
-     if s == "ap" { None } else { Some(s) }
-@@ -396,7 +396,7 @@ impl Protocol {
-         }
-     }
- 
--    pub fn interact(&self, initial_state: Data, mut data_in: Data) -> InteractResult {
-+    pub fn interact(&self, initial_state: Data, mut data_in: Data, endpoint: &Endpoint) -> InteractResult {
-         let mut state = initial_state;
-         loop {
-             let resp = self.invoke(&state, &data_in);
-@@ -408,7 +408,7 @@ impl Protocol {
-             }
-             state = resp.new_state;
-             eprintln!("sending to aliens: {:?}", resp.data_out);
--            data_in = aliens_send(resp.data_out);
-+            data_in = endpoint.aliens_send(resp.data_out);
-             eprintln!("received from aliens: {:?}", data_in);
-         }
-     }
-@@ -518,7 +518,7 @@ mod tests {
-         let protocol = Protocol::from_snippet("\
-         main = ap ap c ap ap b b ap ap b ap b ap cons 0 ap ap c ap ap b b cons ap ap c cons nil ap ap c ap ap b cons ap ap c cons nil nil
-         ");
--        let res = protocol.interact(Data::Nil, Data::make_cons(2, 3));
-+        let res = protocol.interact(Data::Nil, Data::make_cons(2, 3), &Endpoint::NoComms);
-         dbg!(&res);
- 
-         match res.final_state {
-@@ -537,14 +537,14 @@ mod tests {
-         let protocol = Protocol::from_snippet("\
-         main = ap ap b ap b ap ap s ap ap b ap b ap cons 0 ap ap c ap ap b b cons ap ap c cons nil ap ap c cons nil ap c cons
-         ");
--        let res = protocol.interact(Data::Nil, Data::make_cons(0, 0));
-+        let res = protocol.interact(Data::Nil, Data::make_cons(0, 0), &Endpoint::NoComms);
-         assert_eq!(res.final_state.to_pretty_string(), "[(0, 0)]");
-         assert_eq!(res.data_out_to_multipledraw.to_pretty_string(), "[[(0, 0)]]");
- 
--        let res = protocol.interact(res.final_state, Data::make_cons(2, 3));
-+        let res = protocol.interact(res.final_state, Data::make_cons(2, 3), &Endpoint::NoComms);
-         assert_eq!(res.data_out_to_multipledraw.to_pretty_string(), "[[(2, 3), (0, 0)]]");
- 
--        let res = protocol.interact(res.final_state, Data::make_cons(1, 2));
-+        let res = protocol.interact(res.final_state, Data::make_cons(1, 2), &Endpoint::NoComms);
-         assert_eq!(res.data_out_to_multipledraw.to_pretty_string(), "[[(1, 2), (2, 3), (0, 0)]]");
-     }
- }
-diff --git a/src/webapi.rs b/src/webapi.rs
-index 406f2e8..5ed975a 100644
---- a/src/webapi.rs
-+++ b/src/webapi.rs
-@@ -4,28 +4,51 @@ use crate::API_KEY;
- 
- const API_ENDPOINT: &str = "https://icfpc2020-api.testkontur.ru/aliens/send";
- 
--pub fn aliens_send(data: Data) -> Data {
--    let modulated = modulate(data);
--    // convert to string
--    let modulated = modulated.iter().map(|&x| x.to_string()).collect::<Vec<_>>().join("");
--
--    println!("sending {}", modulated);
--
--    let response = ureq::post(API_ENDPOINT)
--        .query("apiKey", API_KEY)
--        .send_string(&modulated);
--
--    if !response.ok() {
--        // TODO: if there is rate limiting, do something about it.
--        println!("got status {} {}", response.status(), response.status_text());
--        println!("is api key correct?");
--        panic!();
--    }
- 
--    let response = response.into_string().expect("valid response");
-+pub enum Endpoint {
-+    NoComms,
-+    Proxy,
-+    SubmissionServer {
-+        url: String,
-+    },
-+}
-+
-+impl Endpoint {
-+    pub fn aliens_send(&self, data: Data) -> Data {
-+        let modulated = modulate(data);
-+        // convert to string
-+        let modulated = modulated.iter().map(|&x| x.to_string()).collect::<Vec<_>>().join("");
-+
-+        println!("sending {}", modulated);
- 
--    println!("got response {}", response);
--    let response = bytes_to_squiggle(response.as_bytes()).expect("response is 01");
--    let demodulated = demodulate(response.iter());
--    demodulated.expect("valid demodulate").0
-+        let response = match self {
-+            Endpoint::NoComms => panic!(),
-+            Endpoint::Proxy => {
-+                ureq::post(API_ENDPOINT)
-+                    .query("apiKey", API_KEY)
-+                    .send_string(&modulated)
-+            }
-+            Endpoint::SubmissionServer { url } => {
-+                ureq::post(url)
-+                    .send_string(&modulated)
-+            }
-+        };
-+        let response = ureq::post(API_ENDPOINT)
-+            .query("apiKey", API_KEY)
-+            .send_string(&modulated);
-+
-+        if !response.ok() {
-+            // TODO: if there is rate limiting, do something about it.
-+            println!("got status {} {}", response.status(), response.status_text());
-+            println!("is api key correct?");
-+            panic!();
-+        }
-+
-+        let response = response.into_string().expect("valid response");
-+
-+        println!("got response {}", response);
-+        let response = bytes_to_squiggle(response.as_bytes()).expect("response is 01");
-+        let demodulated = demodulate(response.iter());
-+        demodulated.expect("valid demodulate").0
-+    }
- }
-\ No newline at end of file
+     // let resp = ureq::post(&server_url).send_string(player_key);
+     // assert!(resp.ok(), "{:?}", resp);
