@@ -3,24 +3,66 @@ cargo build -p tbd --bin example_submission --release
 
 
 ### Base commit
-cab3e40
-Record submission provenance in the submission repo
-Vlad Shcherbina
-Fri Jul 17 15:33:36 2020 +0300
+292a0da
+display prettified state in web ui
+Sergey Matveev
+Sat Jul 18 19:11:42 2020 +0300
 
 
 ### Local changes on top of this base commit
 
 diff --git a/ops/make_submission_local.py b/ops/make_submission_local.py
-index f22d407..467f559 100644
+index 467f559..b37d6ad 100644
 --- a/ops/make_submission_local.py
 +++ b/ops/make_submission_local.py
-@@ -60,6 +60,8 @@ def main():
-     assert cache.exists()
-     sub_repo = cache / 'icfpc2020-tbd-submissions'
-     sub_repo_deploy_key = project_root / 'ops' / 'submission_repo_deploy_key'
-+    key = sub_repo_deploy_key.read_text()
-+    sub_repo_deploy_key.write_text(key)  # fix crlf newlines
-     os.chmod(sub_repo_deploy_key, 0o600)
-     assert ' ' not in str(sub_repo_deploy_key), 'sorry :('
-     ssh_env = dict(GIT_SSH_COMMAND='ssh -i ' + str(sub_repo_deploy_key))
+@@ -21,6 +21,7 @@ the source repository).
+ '''
+ 
+ import os
++from os import makedirs
+ import sys
+ import time
+ import shutil
+@@ -99,7 +100,7 @@ def main():
+     (sub_repo / 'build.sh').write_text('')
+     (sub_repo / 'run.sh').write_text('''\
+ #!/bin/sh
+-RUST_BACKTRACE=1 ./a.out "$@"
++RUST_BACKTRACE=1 icfpc2020-tbd/a.out "$@"
+ ''')
+ 
+     provenance = f'### Binary\ncargo build -p {package} --bin {binary} --release\n'
+@@ -115,9 +116,14 @@ RUST_BACKTRACE=1 ./a.out "$@"
+         cwd=project_root, universal_newlines=True)
+     (sub_repo / 'provenance.txt').write_text(provenance)
+ 
++    # we put it inside the subdirectory called 'icfpc2020-tbd',
++    # to ensure that project_path() works
++    sub_dir = sub_repo / 'icfpc2020-tbd'
++    sub_dir.mkdir(exist_ok=True)
++    shutil.copytree(project_root / 'data', sub_dir / 'data')
+     shutil.copy(
+         project_root / 'cache/target/release' / binary,
+-        sub_repo / 'a.out')
++        sub_dir / 'a.out')
+ 
+     subprocess.check_call(['git', 'add', '.'], cwd=sub_repo, env=ssh_env)
+     subprocess.check_call(
+diff --git a/src/bin/example_submission.rs b/src/bin/example_submission.rs
+index 1342b61..e1fbe37 100644
+--- a/src/bin/example_submission.rs
++++ b/src/bin/example_submission.rs
+@@ -1,8 +1,13 @@
++use tbd::ufolang::Protocol;
++
+ fn main() {
+     let args: Vec<String> = std::env::args().collect();
+     assert_eq!(args.len(), 3);
+     let server_url = &args[1];
+     let player_key = &args[2];
++
++    let _protocol = Protocol::load_galaxy();
++
+     println!("Server URL: {}", server_url);
+     println!("Player key: {}", player_key);
+     let resp = ureq::post(&server_url).send_string(player_key);
