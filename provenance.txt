@@ -1,106 +1,36 @@
 ### Binary
-cargo build -p tbd --bin example_submission --release
+cargo build -p tbd --bin example_player --release
 
 
 ### Base commit
-b8f84d1
-Generalize endpoints to allow connection to submission server
+ed8c126
+JOIN request
 Vlad Shcherbina
-Sun Jul 19 00:29:21 2020 +0300
+Sun Jul 19 01:56:04 2020 +0300
 
 
 ### Local changes on top of this base commit
 
 diff --git a/src/bin/example_submission.rs b/src/bin/example_submission.rs
-index 24c7651..6cfeb2d 100644
+index 6cfeb2d..1c7462d 100644
 --- a/src/bin/example_submission.rs
 +++ b/src/bin/example_submission.rs
-@@ -1,23 +1,19 @@
+@@ -1,3 +1,6 @@
++// THIS IS A LOW-LEVEL EXAMPLE.
++// SEE example_player.rs INSTEAD.
++
  use tbd::{webapi::Endpoint, ufolang::Protocol, squiggle::Data};
  
  fn main() {
--    let protocol = Protocol::load_galaxy();
--
-     let args: Vec<String> = std::env::args().collect();
-     assert_eq!(args.len(), 3);
-     let server_url = args[1].clone();
-     let player_key = &args[2];
--    println!("Server URL: {}", server_url);
--    println!("Player key: {}", player_key);
--    let endpoint = &Endpoint::SubmissionServer { url: server_url };
-+    eprintln!("Server URL: {}", server_url);
-+    eprintln!("Player key: {}", player_key);
-+    let endpoint = Endpoint::SubmissionServer { server_url };
-     let player_key: i128 = player_key.parse().unwrap();
+diff --git a/src/lib.rs b/src/lib.rs
+index 399fd7a..03751b7 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -8,6 +8,7 @@ pub mod tree;
+ pub mod squiggle;
+ pub mod webapi;
+ pub mod ufolang;
++pub mod uforest;
  
--    let mut state = Data::Nil;
--
-     // JOIN
--    let data_in = Data::make_list3(2, player_key, Data::Nil);
--    let result = protocol.interact(state, data_in, endpoint);
--    dbg!(&result);
-+    let req = Data::make_list3(2, player_key, Data::Nil);
-+    let resp = endpoint.aliens_send(req);
-+    dbg!(resp);
- 
-     // let resp = ureq::post(&server_url).send_string(player_key);
-     // assert!(resp.ok(), "{:?}", resp);
-diff --git a/src/webapi.rs b/src/webapi.rs
-index fbe2380..9f36cf6 100644
---- a/src/webapi.rs
-+++ b/src/webapi.rs
-@@ -2,13 +2,13 @@
- use crate::squiggle::*;
- use crate::API_KEY;
- 
--const API_PROXY: &str = "https://icfpc2020-api.testkontur.ru/aliens/send";
-+const API_PROXY: &str = "https://icfpc2020-api.testkontur.ru";
- 
- pub enum Endpoint {
-     NoComms,
-     Proxy,
-     SubmissionServer {
--        url: String,
-+        server_url: String,
-     },
- }
- 
-@@ -18,31 +18,31 @@ impl Endpoint {
-         // convert to string
-         let modulated = modulated.iter().map(|&x| x.to_string()).collect::<Vec<_>>().join("");
- 
--        println!("sending {}", modulated);
-+        eprintln!("sending {}", modulated);
- 
-         let response = match self {
-             Endpoint::NoComms => panic!(),
-             Endpoint::Proxy => {
--                ureq::post(API_PROXY)
-+                ureq::post(&format!("{}/aliens/send", API_PROXY))
-                     .query("apiKey", API_KEY)
-                     .send_string(&modulated)
-             }
--            Endpoint::SubmissionServer { url } => {
--                ureq::post(url)
-+            Endpoint::SubmissionServer { server_url } => {
-+                ureq::post(&format!("{}/aliens/send", server_url))
-                     .send_string(&modulated)
-             }
-         };
- 
-         if !response.ok() {
-             // TODO: if there is rate limiting, do something about it.
--            println!("got status {} {}", response.status(), response.status_text());
--            println!("is api key correct?");
-+            eprintln!("got status {} {}", response.status(), response.status_text());
-+            eprintln!("is api key correct?");
-             panic!();
-         }
- 
-         let response = response.into_string().expect("valid response");
- 
--        println!("got response {}", response);
-+        eprintln!("got response {}", response);
-         let response = bytes_to_squiggle(response.as_bytes()).expect("response is 01");
-         let demodulated = demodulate(response.iter());
-         demodulated.expect("valid demodulate").0
+ pub fn hello() {
+     println!("hello");
