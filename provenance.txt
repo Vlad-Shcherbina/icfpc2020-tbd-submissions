@@ -12,25 +12,24 @@ Sun Jul 19 00:29:21 2020 +0300
 ### Local changes on top of this base commit
 
 diff --git a/src/bin/example_submission.rs b/src/bin/example_submission.rs
-index 24c7651..6973dc2 100644
+index 24c7651..55b3225 100644
 --- a/src/bin/example_submission.rs
 +++ b/src/bin/example_submission.rs
-@@ -1,7 +1,9 @@
+@@ -1,23 +1,19 @@
  use tbd::{webapi::Endpoint, ufolang::Protocol, squiggle::Data};
  
  fn main() {
 -    let protocol = Protocol::load_galaxy();
-+    // do we even need headless galaxy,
-+    // or could we get away with ufo-http-api?
-+    let _protocol = Protocol::load_galaxy();
- 
+-
      let args: Vec<String> = std::env::args().collect();
      assert_eq!(args.len(), 3);
-@@ -9,15 +11,13 @@ fn main() {
+     let server_url = args[1].clone();
      let player_key = &args[2];
-     println!("Server URL: {}", server_url);
-     println!("Player key: {}", player_key);
+-    println!("Server URL: {}", server_url);
+-    println!("Player key: {}", player_key);
 -    let endpoint = &Endpoint::SubmissionServer { url: server_url };
++    eprintln!("Server URL: {}", server_url);
++    eprintln!("Player key: {}", player_key);
 +    let endpoint = Endpoint::SubmissionServer { url: format!("{}/aliens/send", server_url) };
      let player_key: i128 = player_key.parse().unwrap();
  
@@ -46,3 +45,34 @@ index 24c7651..6973dc2 100644
  
      // let resp = ureq::post(&server_url).send_string(player_key);
      // assert!(resp.ok(), "{:?}", resp);
+diff --git a/src/webapi.rs b/src/webapi.rs
+index fbe2380..163b829 100644
+--- a/src/webapi.rs
++++ b/src/webapi.rs
+@@ -18,7 +18,7 @@ impl Endpoint {
+         // convert to string
+         let modulated = modulated.iter().map(|&x| x.to_string()).collect::<Vec<_>>().join("");
+ 
+-        println!("sending {}", modulated);
++        eprintln!("sending {}", modulated);
+ 
+         let response = match self {
+             Endpoint::NoComms => panic!(),
+@@ -35,14 +35,14 @@ impl Endpoint {
+ 
+         if !response.ok() {
+             // TODO: if there is rate limiting, do something about it.
+-            println!("got status {} {}", response.status(), response.status_text());
+-            println!("is api key correct?");
++            eprintln!("got status {} {}", response.status(), response.status_text());
++            eprintln!("is api key correct?");
+             panic!();
+         }
+ 
+         let response = response.into_string().expect("valid response");
+ 
+-        println!("got response {}", response);
++        eprintln!("got response {}", response);
+         let response = bytes_to_squiggle(response.as_bytes()).expect("response is 01");
+         let demodulated = demodulate(response.iter());
+         demodulated.expect("valid demodulate").0
