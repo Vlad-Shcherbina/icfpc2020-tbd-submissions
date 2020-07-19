@@ -3,24 +3,28 @@ cargo build -p tbd --bin example_player --release
 
 
 ### Base commit
-c750fec
-Error handling in GameResponse parser
+75d3a29
+alien_send retries
 Vlad Shcherbina
-Sun Jul 19 07:33:03 2020 +0300
+Sun Jul 19 09:26:08 2020 +0300
 
 
 ### Local changes on top of this base commit
 
-diff --git a/src/uforest.rs b/src/uforest.rs
-index 7791002..80a9e58 100644
---- a/src/uforest.rs
-+++ b/src/uforest.rs
-@@ -57,7 +57,7 @@ impl Client {
-             i.number3,
-             i.number4,
-         );
--        let req = Data::make_list3(3, self.player_key, i);
-+        let req = Data::make_list3(3, self.player_key, Data::Nil);
-         self.endpoint.aliens_send(req).try_into().unwrap()
-     }
+diff --git a/src/bin/example_player.rs b/src/bin/example_player.rs
+index aa38cfc..b8d762d 100644
+--- a/src/bin/example_player.rs
++++ b/src/bin/example_player.rs
+@@ -19,9 +19,9 @@ fn main() {
+         assert_eq!(gr.stage, Stage::NotStarted);
  
+         let gr = client.start(InitialShipParams {
+-            number1: 1,
+-            number2: 1,
+-            number3: 1,
++            number1: 501,
++            number2: 0,
++            number3: 0,
+             number4: 1,
+         });
+         dbg!(&gr);
