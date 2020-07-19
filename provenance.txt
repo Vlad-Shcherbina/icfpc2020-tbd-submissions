@@ -3,11 +3,212 @@ cargo build -p tbd --bin example_player --release
 
 
 ### Base commit
-bc64a2e
-Neat bot interface
+4a92ab2
+Fix some warnings
 Vlad Shcherbina
-Sun Jul 19 15:57:02 2020 +0300
+Mon Jul 20 02:35:07 2020 +0300
 
 
 ### Local changes on top of this base commit
 
+diff --git a/scratches/earthdok/src/bin/local_bot_runner.rs b/scratches/earthdok/src/bin/local_bot_runner.rs
+index 5ffe1a0..c333da4 100644
+--- a/scratches/earthdok/src/bin/local_bot_runner.rs
++++ b/scratches/earthdok/src/bin/local_bot_runner.rs
+@@ -1,6 +1,6 @@
+-use tbd::local_bot_runner::run_bots;
++use tbd::runners::run_bots_local;
+ use earthdok::simple_ai;
+ 
+ fn main() {
+-   run_bots(simple_ai::SimpleAi {}, simple_ai::SimpleAi {});
++   run_bots_local(simple_ai::SimpleAi {}, simple_ai::SimpleAi {});
+ }
+\ No newline at end of file
+diff --git a/scratches/julie/src/bin/alt_bot_runner.rs b/scratches/julie/src/bin/alt_bot_runner.rs
+index b127afc..726427b 100644
+--- a/scratches/julie/src/bin/alt_bot_runner.rs
++++ b/scratches/julie/src/bin/alt_bot_runner.rs
+@@ -1,6 +1,6 @@
+-use tbd::local_bot_runner::run_bots;
++use tbd::runners::run_bots_local;
+ use julie::predicting_ai::PredictingAi;
+ 
+ fn main() {
+-    run_bots(PredictingAi {}, PredictingAi {});
++    run_bots_local(PredictingAi {}, PredictingAi {});
+ }
+diff --git a/scratches/pavel/src/bin/player.rs b/scratches/pavel/src/bin/player.rs
+index 064eae3..4a8c343 100644
+--- a/scratches/pavel/src/bin/player.rs
++++ b/scratches/pavel/src/bin/player.rs
+@@ -4,7 +4,7 @@
+ use tbd::uforest::*;
+ use tbd::ai_interface::Ai;
+ use tbd::uforest::Command::Accelerate;
+-use tbd::local_bot_runner::run_bots;
++use tbd::runners::run_bots_local;
+ 
+ pub struct MyAi {}
+ 
+@@ -45,5 +45,5 @@ impl Ai for MyAi {
+ }
+ 
+ fn main() {
+-    run_bots(MyAi {}, MyAi {});
++    run_bots_local(MyAi {}, MyAi {});
+ }
+diff --git a/src/bin/example_player.rs b/src/bin/example_player.rs
+index 27f2e28..0d794f9 100644
+--- a/src/bin/example_player.rs
++++ b/src/bin/example_player.rs
+@@ -4,5 +4,12 @@
+ use tbd::ai_interface::ExampleAi;
+ 
+ fn main() {
+-    tbd::runners::run_in_submission(ExampleAi {} );
++    if tbd::is_running_in_submission() {
++        tbd::runners::run_in_submission(ExampleAi {});
++    } else {
++        tbd::runners::run_bots_local(
++            ExampleAi {},
++            ExampleAi {},
++        );
++    }
+ }
+diff --git a/src/lib.rs b/src/lib.rs
+index 38ebeec..4ca03c1 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -22,6 +22,10 @@ pub fn hello() {
+     println!("hello");
+ }
+ 
++pub fn is_running_in_submission() -> bool {
++    std::env::args().count() == 3
++}
++
+ fn project_root() -> PathBuf {
+     let exe = std::fs::canonicalize(std::env::args().next().unwrap()).unwrap();
+     let mut path: &Path = &exe;
+diff --git a/src/local_bot_runner.rs b/src/local_bot_runner.rs
+index ff5cdf3..013649b 100644
+--- a/src/local_bot_runner.rs
++++ b/src/local_bot_runner.rs
+@@ -1,38 +1,7 @@
+-use crate::webapi::Endpoint;
+-use crate::squiggle::Data;
+-use std::process::Command;
+-use crate::project_path;
+-use crate::ai_interface::{ExampleAi, Ai};
+-use std::time::Duration;
+-use crate::runners::run_local;
+-
+-pub fn get_player_keys() -> Result<(i128, i128), String> {
+-    let responce = Endpoint::Proxy.aliens_send(Data::make_list2(Data::Number(1),
+-                                                                Data::Number(0)));
+-    let responce = responce.try_into_vec().ok_or("Vec expected")?;
+-    let keys = responce[1].clone().try_into_vec().ok_or("Vec expected")?;
+-    let first_key = keys[0].clone().try_into_vec().ok_or("Vec expected")?;
+-    let second_key = keys[1].clone().try_into_vec().ok_or("Vec expected")?;
+-    let first_key = first_key[1].try_as_number().ok_or("Number expected")?;
+-    let second_key = second_key[1].try_as_number().ok_or("Number expected")?;
+-    Ok((first_key, second_key))
+-}
+-
+-pub fn run_bots(ai1: impl Ai + 'static, ai2: impl Ai + 'static) {
+-    let keys = get_player_keys().expect("Can't obtain player keys");
+-    let firs_bot = std::thread::spawn(move || {
+-        run_local(keys.0, ai1);
+-    });
+-    let second_bot = std::thread::spawn(move || {
+-        run_local(keys.1, ai2);
+-    });
+-    firs_bot.join().unwrap();
+-    second_bot.join().unwrap();
+-    println!("Use this state if you want to see replay");
+-    println!("(5, ((4, ({}, (nil, (nil, (nil, (nil, ((36, 0), (24324, nil)))))))), (9, (nil, nil))))", keys.0);
+-    println!("Paste it in galaxy pad");
+-    println!("Close player_key input");
+-    println!("Click galaxy");
+-    println!("Step replay by galaxy clicking");
+-
+-}
+\ No newline at end of file
++// use crate::webapi::Endpoint;
++// use crate::squiggle::Data;
++// use std::process::Command;
++// use crate::project_path;
++// use crate::ai_interface::{ExampleAi, Ai};
++// use std::time::Duration;
++// use crate::runners::run_local;
+diff --git a/src/runners.rs b/src/runners.rs
+index b083ba5..bc588ce 100644
+--- a/src/runners.rs
++++ b/src/runners.rs
+@@ -1,5 +1,5 @@
+ use crate::uforest::*;
+-use crate::ai_interface::Ai;
++use crate::{webapi::Endpoint, ai_interface::Ai};
+ 
+ fn run_with_client(client: Client, mut ai: impl Ai) {
+     let join_request = ai.choose_join_request();
+@@ -28,12 +28,43 @@ fn run_with_client(client: Client, mut ai: impl Ai) {
+     }
+ }
+ 
+-pub fn  run_in_submission(ai: impl Ai) {
++pub fn run_in_submission(ai: impl Ai) {
+     let client = Client::from_submission_argv();
+     run_with_client(client, ai);
+ }
+ 
+-pub fn run_local(player_key: i128, ai: impl Ai) {
++fn run_local(player_key: i128, ai: impl Ai) {
+     let client = Client::from_player_key(player_key);
+     run_with_client(client, ai);
+ }
++
++fn get_player_keys() -> Result<(i128, i128), String> {
++    let responce = Endpoint::Proxy.aliens_send(Data::make_list2(Data::Number(1),
++                                                                Data::Number(0)));
++    let responce = responce.try_into_vec().ok_or("Vec expected")?;
++    let keys = responce[1].clone().try_into_vec().ok_or("Vec expected")?;
++    let first_key = keys[0].clone().try_into_vec().ok_or("Vec expected")?;
++    let second_key = keys[1].clone().try_into_vec().ok_or("Vec expected")?;
++    let first_key = first_key[1].try_as_number().ok_or("Number expected")?;
++    let second_key = second_key[1].try_as_number().ok_or("Number expected")?;
++    Ok((first_key, second_key))
++}
++
++pub fn run_bots_local(ai1: impl Ai + 'static, ai2: impl Ai + 'static) {
++    let keys = get_player_keys().expect("Can't obtain player keys");
++    let firs_bot = std::thread::spawn(move || {
++        run_local(keys.0, ai1);
++    });
++    let second_bot = std::thread::spawn(move || {
++        run_local(keys.1, ai2);
++    });
++    firs_bot.join().unwrap();
++    second_bot.join().unwrap();
++    println!("Use this state if you want to see replay");
++    println!("(5, ((4, ({}, (nil, (nil, (nil, (nil, ((36, 0), (24324, nil)))))))), (9, (nil, nil))))", keys.0);
++    println!("Paste it in galaxy pad");
++    println!("Close player_key input");
++    println!("Click galaxy");
++    println!("Step replay by galaxy clicking");
++
++}
+\ No newline at end of file
+diff --git a/src/uforest.rs b/src/uforest.rs
+index 7a829db..18d0a7a 100644
+--- a/src/uforest.rs
++++ b/src/uforest.rs
+@@ -133,6 +133,7 @@ impl Client {
+     }
+ 
+     pub fn from_submission_argv() -> Self {
++        assert!(crate::is_running_in_submission());
+         let args: Vec<String> = std::env::args().collect();
+         assert_eq!(args.len(), 3);
+         let server_url = args[1].clone();
