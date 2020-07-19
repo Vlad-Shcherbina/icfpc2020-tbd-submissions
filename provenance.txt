@@ -13,15 +13,16 @@ Sun Jul 19 14:54:33 2020 +0200
 
 diff --git a/scratches/pavel/src/bin/player.rs b/scratches/pavel/src/bin/player.rs
 new file mode 100644
-index 0000000..2fe9529
+index 0000000..a0488be
 --- /dev/null
 +++ b/scratches/pavel/src/bin/player.rs
-@@ -0,0 +1,30 @@
+@@ -0,0 +1,48 @@
 +// Minimal player example. It can be used as a submission.
 +// Feel free to copy this and create your own bot.
 +
 +use tbd::uforest::*;
 +use tbd::ai_interface::Ai;
++use tbd::uforest::Command::Accelerate;
 +
 +pub struct ExampleAi {}
 +
@@ -39,11 +40,43 @@ index 0000000..2fe9529
 +        }
 +    }
 +
-+    fn choose_commands(&mut self, _spec: &GameSpec, _state: &GameState) -> Commands {
-+        Commands(vec![])
++    fn choose_commands(&mut self, _spec: &GameSpec, state: &GameState) -> Commands {
++        let ship = state.ships_list.iter()
++            .find(|ship| ship.ship_state.ship_id == 0)
++            .expect("No 0 ship_id");
++        let acc_x = if ship.ship_state.position.x > 0 {
++            -1
++        } else if ship.ship_state.position.x == 0 {
++            0
++        } else {
++            1
++        };
++        let acc_y = if ship.ship_state.position.y > 0 {
++            -1
++        } else if ship.ship_state.position.y == 0 {
++            0
++        } else {
++            1
++        };
++        Commands(vec![Accelerate { ship_id: 0, vector: Vec2 { x: acc_x, y: acc_y } }])
 +    }
 +}
 +
 +fn main() {
 +    tbd::runners::run_in_submission(ExampleAi {} );
 +}
+diff --git a/src/uforest.rs b/src/uforest.rs
+index 2750c88..18b6d83 100644
+--- a/src/uforest.rs
++++ b/src/uforest.rs
+@@ -21,8 +21,8 @@ pub enum Role {
+ 
+ #[derive(Debug, Clone, PartialEq)]
+ pub struct Vec2 {
+-    x: i128,
+-    y: i128,
++    pub x: i128,
++    pub y: i128,
+ }
+ 
+ #[derive(Debug)]
