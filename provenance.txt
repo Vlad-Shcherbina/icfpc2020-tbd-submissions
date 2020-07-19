@@ -1,13 +1,49 @@
 ### Binary
-cargo build -p tbd --bin example_submission --release
+cargo build -p pavel --bin player --release
 
 
 ### Base commit
-5f0c395
-Fix CRLF in repository key
-Vlad Shcherbina
-Fri Jul 17 16:04:13 2020 +0300
+94ea272
+add moar type infos
+Ilona
+Sun Jul 19 14:54:33 2020 +0200
 
 
 ### Local changes on top of this base commit
 
+diff --git a/scratches/pavel/src/bin/player.rs b/scratches/pavel/src/bin/player.rs
+new file mode 100644
+index 0000000..2fe9529
+--- /dev/null
++++ b/scratches/pavel/src/bin/player.rs
+@@ -0,0 +1,30 @@
++// Minimal player example. It can be used as a submission.
++// Feel free to copy this and create your own bot.
++
++use tbd::uforest::*;
++use tbd::ai_interface::Ai;
++
++pub struct ExampleAi {}
++
++impl Ai for ExampleAi {
++    fn choose_join_request(&mut self) -> JoinRequest {
++        JoinRequest { mystery: Data::Nil }
++    }
++
++    fn initial_ship_params(&mut self, _spec: &GameSpec) -> ShipParams {
++        ShipParams {
++            fuel: 1,
++            laser: 1,
++            bars: 1,
++            hull: 1,
++        }
++    }
++
++    fn choose_commands(&mut self, _spec: &GameSpec, _state: &GameState) -> Commands {
++        Commands(vec![])
++    }
++}
++
++fn main() {
++    tbd::runners::run_in_submission(ExampleAi {} );
++}

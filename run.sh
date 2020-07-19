@@ -1,2 +1,2 @@
 #!/bin/sh
-RUST_BACKTRACE=1 ./a.out "$@"
+RUST_BACKTRACE=1 icfpc2020-tbd/a.out "$@"
