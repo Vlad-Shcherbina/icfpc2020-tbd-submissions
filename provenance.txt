@@ -3,10 +3,10 @@ cargo build -p earthdok --bin simple_player --release
 
 
 ### Base commit
-a696d6f
-added simple player (counteracts gravity)
+b2da85c
+fix thrust
 Sergey Matveev
-Sun Jul 19 17:26:56 2020 +0300
+Sun Jul 19 17:47:24 2020 +0300
 
 
 ### Local changes on top of this base commit
