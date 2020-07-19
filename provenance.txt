@@ -90,3 +90,35 @@ index 92fbc10..fa16870 100644
          let stage = parts[1].clone().into();
          let unknown_list_a = parts[2].clone();
          let state = parts[3].clone();
+diff --git a/src/webapi.rs b/src/webapi.rs
+index 9f36cf6..0caf303 100644
+--- a/src/webapi.rs
++++ b/src/webapi.rs
+@@ -14,12 +14,11 @@ pub enum Endpoint {
+ 
+ impl Endpoint {
+     pub fn aliens_send(&self, data: Data) -> Data {
++        eprintln!("sending {:?}", data);
+         let modulated = modulate(data);
+         // convert to string
+         let modulated = modulated.iter().map(|&x| x.to_string()).collect::<Vec<_>>().join("");
+ 
+-        eprintln!("sending {}", modulated);
+-
+         let response = match self {
+             Endpoint::NoComms => panic!(),
+             Endpoint::Proxy => {
+@@ -42,9 +41,10 @@ impl Endpoint {
+ 
+         let response = response.into_string().expect("valid response");
+ 
+-        eprintln!("got response {}", response);
+         let response = bytes_to_squiggle(response.as_bytes()).expect("response is 01");
+         let demodulated = demodulate(response.iter());
+-        demodulated.expect("valid demodulate").0
++        let result = demodulated.expect("valid demodulate").0;
++        eprintln!("got response {:?}", result);
++        result
+     }
+ }
+\ No newline at end of file
