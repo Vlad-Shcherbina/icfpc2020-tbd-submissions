@@ -3,41 +3,11 @@ cargo build -p tbd --bin example_player --release
 
 
 ### Base commit
-a835708
-Remove defensive shit from example_player
+bc64a2e
+Neat bot interface
 Vlad Shcherbina
-Sun Jul 19 14:08:56 2020 +0300
+Sun Jul 19 15:57:02 2020 +0300
 
 
 ### Local changes on top of this base commit
 
-diff --git a/src/bin/example_player.rs b/src/bin/example_player.rs
-index 88ad1b5..488c27e 100644
---- a/src/bin/example_player.rs
-+++ b/src/bin/example_player.rs
-@@ -8,6 +8,9 @@ fn main() {
- 
-     let gr = client.join(JoinRequest { mystery: Data::Nil });
-     dbg!(&gr);
-+    if gr.stage == Stage::Finished {
-+        return;
-+    }
- 
-     let gr = client.start(ShipParams {
-         fuel: 1,
-@@ -16,9 +19,15 @@ fn main() {
-         number4: 1,
-     });
-     dbg!(&gr);
-+    if gr.stage == Stage::Finished {
-+        return;
-+    }
- 
-     loop {
-         let gr = client.commands(Commands(vec![]));
-         dbg!(&gr);
-+        if gr.stage == Stage::Finished {
-+            return;
-+        }
-     }
- }
