@@ -3,28 +3,28 @@ cargo build -p tbd --bin example_player --release
 
 
 ### Base commit
-75d3a29
-alien_send retries
+8a8630a
+Coords as hover text
 Vlad Shcherbina
-Sun Jul 19 09:26:08 2020 +0300
+Sun Jul 19 12:32:44 2020 +0300
 
 
 ### Local changes on top of this base commit
 
 diff --git a/src/bin/example_player.rs b/src/bin/example_player.rs
-index aa38cfc..b8d762d 100644
+index 1dc7a27..da6ac48 100644
 --- a/src/bin/example_player.rs
 +++ b/src/bin/example_player.rs
 @@ -19,9 +19,9 @@ fn main() {
          assert_eq!(gr.stage, Stage::NotStarted);
  
          let gr = client.start(InitialShipParams {
--            number1: 1,
+-            fuel: 1,
 -            number2: 1,
 -            number3: 1,
-+            number1: 501,
++            fuel: 8,
 +            number2: 0,
-+            number3: 0,
++            number3: 8,
              number4: 1,
          });
          dbg!(&gr);
