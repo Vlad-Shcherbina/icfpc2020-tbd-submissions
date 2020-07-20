@@ -29,7 +29,7 @@ index 8771b3b..2c71897 100644
          run_bots_local(PredictingAi {}, PredictingAi {});
      }
 diff --git a/scratches/julie/src/bin/scarecrow_players.rs b/scratches/julie/src/bin/scarecrow_players.rs
-index 38d872e..551d66d 100644
+index 38d872e..f1b79cc 100644
 --- a/scratches/julie/src/bin/scarecrow_players.rs
 +++ b/scratches/julie/src/bin/scarecrow_players.rs
 @@ -1,6 +1,7 @@
@@ -41,7 +41,7 @@ index 38d872e..551d66d 100644
  
  // fuel x1, laser x4, cooling x12, hull x2
  
-@@ -72,7 +73,8 @@ impl Ai for ScarecrowBot {
+@@ -72,17 +73,18 @@ impl Ai for ScarecrowBot {
      }
  
      fn choose_commands(&mut self, spec: &GameSpec, _state: &GameState) -> Commands {
@@ -51,14 +51,14 @@ index 38d872e..551d66d 100644
      }
  }
  
-@@ -80,9 +82,9 @@ impl Ai for ScarecrowBot {
+ 
  fn main() {
      if tbd::is_running_in_submission() {
-         run_in_submission(ScarecrowBot {t: ScarecrowType::Sniper});
--        run_in_submission(ScarecrowBot {t: ScarecrowType::Carrier});
+-        run_in_submission(ScarecrowBot {t: ScarecrowType::Sniper});
++        // run_in_submission(ScarecrowBot {t: ScarecrowType::Sniper});
+         run_in_submission(ScarecrowBot {t: ScarecrowType::Carrier});
 -        run_in_submission(ScarecrowBot {t: ScarecrowType::Kamikaze});
 -        run_in_submission(ScarecrowBot {t: ScarecrowType::KamikazeCrew});
-+        // run_in_submission(ScarecrowBot {t: ScarecrowType::Carrier});
 +        // run_in_submission(ScarecrowBot {t: ScarecrowType::Kamikaze});
 +        // run_in_submission(ScarecrowBot {t: ScarecrowType::KamikazeCrew});
      } else {
