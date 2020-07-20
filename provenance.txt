@@ -3,29 +3,40 @@ cargo build -p tbd --bin bee_player --release
 
 
 ### Base commit
-c483e49
-Ellipses
+49ba837
+WIP
 Vlad Shcherbina
-Mon Jul 20 09:48:45 2020 +0300
+Mon Jul 20 10:06:05 2020 +0300
 
 
 ### Local changes on top of this base commit
 
 diff --git a/src/bin/bee_player.rs b/src/bin/bee_player.rs
-index 642ca5c..84ce10b 100644
+index 1d03a85..7cdf644 100644
 --- a/src/bin/bee_player.rs
 +++ b/src/bin/bee_player.rs
-@@ -117,8 +117,11 @@ impl Ai for Bee {
-     fn initial_ship_params(&mut self, spec: &GameSpec) -> ShipParams {
-         let max_cost = spec.bounds.max_cost;
-         let laser = 0;
--        let hull = 1;
--        let cooling = 5;
-+        let hull = 4;
-+        let cooling = match spec.role {
-+            Role::Defender => 30,
-+            Role::Attacker => 8,
-+        };
-         ShipParams {
-             fuel: max_cost - hull * HULL_COST - cooling * COOLING_COST - laser * LASER_COST,
-             laser,
+@@ -42,6 +42,7 @@ fn predict(mut pos: Vec2, mut vel: Vec2, mut control: i128) -> Vec<Vec2> {
+ 
+ fn def_score(trajectory: &[Vec2], field: &Field) -> i128 {
+     let mut min = 1000000;
++    let mut max = -1000000;
+     for (i, &p) in trajectory.iter().enumerate() {
+         if i < 50 {
+             let err = field.planet_radius + 3 - p.norm();
+@@ -57,6 +58,7 @@ fn def_score(trajectory: &[Vec2], field: &Field) -> i128 {
+             return -500;
+         }
+         min = min.min(p.norm());
++        max = max.max(p.norm());
+     }
+     return min
+ }
+@@ -120,7 +122,7 @@ impl Ai for Bee {
+             };
+             let control = (-30..=30).max_by_key(|&control| {
+                 score(&predict(pos, vel, control), field)
+-                - control.abs()  // penalty for wasting fuel
++                - 2 * control.abs()  // penalty for wasting fuel
+             }).unwrap();
+ 
+             let a = ccw(pos);
