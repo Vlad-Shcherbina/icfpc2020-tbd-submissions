@@ -12,7 +12,7 @@ Mon Jul 20 06:54:50 2020 +0300
 ### Local changes on top of this base commit
 
 diff --git a/scratches/manpages/src/simple_ai.rs b/scratches/manpages/src/simple_ai.rs
-index dcc8905..d0add0d 100644
+index dcc8905..6bfd5fb 100644
 --- a/scratches/manpages/src/simple_ai.rs
 +++ b/scratches/manpages/src/simple_ai.rs
 @@ -1,23 +1,93 @@
@@ -140,7 +140,7 @@ index dcc8905..d0add0d 100644
      let hull = 1;
      let laser = 0;
      let rem_cost = max_cost - fuel0 - hull * POINT_BUY[3] - 0;
-@@ -53,6 +112,22 @@ pub fn orbit_tank(max_cost : i128) -> ShipParams {
+@@ -53,14 +112,35 @@ pub fn orbit_tank(max_cost : i128) -> ShipParams {
      ShipParams { fuel, laser, cooling, hull }
  }
  
@@ -162,8 +162,11 @@ index dcc8905..d0add0d 100644
 +
  impl Ai for OrbitBot {
      fn choose_join_request(&mut self) -> JoinRequest {
-         JoinRequest { mystery: Data::Nil }
-@@ -61,6 +136,10 @@ impl Ai for OrbitBot {
+-        JoinRequest { mystery: Data::Nil }
++        let join = Data::make_list1( 103652820);
++        JoinRequest { mystery: join }
+     }
+ 
      // Plan is to fork as much as we can, giving a couple afterburners to each fork
      // after we stand on orbit
      fn initial_ship_params(&mut self, spec: &GameSpec) -> ShipParams {
@@ -174,7 +177,7 @@ index dcc8905..d0add0d 100644
          orbit_tank(spec.bounds.max_cost)
      }
  
-@@ -80,15 +159,18 @@ impl Ai for OrbitBot {
+@@ -80,15 +160,18 @@ impl Ai for OrbitBot {
          let field = spec.field.as_ref().unwrap();
          let gravity = get_gravity(our_ship.ship_state.position);
  
