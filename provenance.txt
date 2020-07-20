@@ -3,62 +3,178 @@ cargo build -p manpages --bin not_forking_yet --release
 
 
 ### Base commit
-8cd6fa4
-Orbit tank bot
+301d039
+Fix orbit tank bot
 cognivore
-Mon Jul 20 06:23:20 2020 +0300
+Mon Jul 20 06:54:50 2020 +0300
 
 
 ### Local changes on top of this base commit
 
 diff --git a/scratches/manpages/src/simple_ai.rs b/scratches/manpages/src/simple_ai.rs
-index 93f9b59..dcc8905 100644
+index dcc8905..c7ea749 100644
 --- a/scratches/manpages/src/simple_ai.rs
 +++ b/scratches/manpages/src/simple_ai.rs
-@@ -22,17 +22,34 @@ pub fn acc(pos: Vec2) -> Vec2 {
-     }
- }
+@@ -1,23 +1,69 @@
+ use tbd::ai_interface::Ai;
+-use tbd::uforest::{JoinRequest, ShipParams, GameSpec, Data, GameState, Commands, Role, Command};
++use tbd::uforest::{JoinRequest, ShipParams, GameSpec, Data, GameState, Commands, Role, Command, Ship};
+ use tbd::bot_util::{ships_by_role, get_gravity, predict_collisions};
+ use tbd::vec2::Vec2;
  
--//                                  laser x4, cooling x12, hull x2
-+const FUEL : usize = 0;
-+const LASER : usize = 1;
-+const COOLING : usize = 2;
-+const HULL : usize = 3;
+ pub struct OrbitBot {}
+ 
+-pub fn acc(pos: Vec2) -> Vec2 {
++const HERE : i128 = 0;
++const UP : i128 = 1;
++const DOWN : i128 = -1;
++const RIGHT : i128 = 1;
++const LEFT : i128 = -1;
 +
-+//                    fuel x1, laser x4, cooling x12, hull x2
- const POINT_BUY : &[i128 ; 4] = &[ 1, 4, 12, 2 ];
- 
-+pub fn scare_them_ship(max_cost : i128) -> ShipParams {
-+    // now let's split point buy so that we have at least 10
-+    let fuel = 20;
-+    let hull = 1;
-+    let cooling = 8;
-+    let rem_cost = max_cost - fuel - hull * POINT_BUY[HULL] - 0 - cooling * POINT_BUY[COOLING];
-+    let laser = rem_cost / POINT_BUY[LASER];
-+    let fuel_surplus = rem_cost % POINT_BUY[LASER];
-+    ShipParams { fuel, laser, cooling, hull }
++const FLY_UP : Vec2 = Vec2 { x: HERE, y: DOWN };
++const FLY_DOWN : Vec2 = Vec2 { x: HERE, y: DOWN };
++
++const FLY_RIGHT : Vec2 = Vec2 { x: LEFT, y: HERE };
++const FLY_LEFT : Vec2 = Vec2 { x: RIGHT, y: HERE };
++
++const FLY_RIGHT_UP : Vec2 = Vec2 { x: LEFT, y: DOWN };
++const FLY_LEFT_DOWN : Vec2 = Vec2 { x: RIGHT, y: UP };
++
++const FLY_LEFT_UP : Vec2 = Vec2 { x: RIGHT, y: DOWN };
++const FLY_RIGHT_DOWN : Vec2 = Vec2 { x: LEFT, y: UP };
++
++fn we_are_not_farther_from_the_planet_along_y_axis(pos : Vec2) -> bool {
++    pos.y.abs() > pos.x.abs()
++}
++fn we_are_to_the_right_of_the_planet(pos : Vec2) -> bool {
++    pos.x > 0
++}
++fn we_are_higher_than_the_planet(pos : Vec2) -> bool {
++    pos.y > 0
 +}
 +
++pub fn acc(pos: Vec2) -> Vec2 { // Accelerate away from the center
++    match (we_are_to_the_right_of_the_planet(pos), we_are_higher_than_the_planet(pos)) {
++        (true, true) => FLY_RIGHT_UP,
++        (true, false) => FLY_RIGHT_DOWN,
++        (false, true) => FLY_LEFT_UP,
++        (false, flase) => FLY_LEFT_DOWN,
++    }
++}
++
++pub fn dec(pos: Vec2) -> Vec2 { // Decelerate away from the walls
++    match (we_are_to_the_right_of_the_planet(pos), we_are_higher_than_the_planet(pos)) {
++        (true, true) => FLY_LEFT_DOWN,
++        (true, false) => FLY_LEFT_UP,
++        (false, true) => FLY_RIGHT_DOWN,
++        (false, flase) => FLY_RIGHT_UP,
++    }
++}
++
++pub fn acc_pavel(pos: Vec2) -> Vec2 {
+     // TODO: what happens at abs(x) == abs(y)??
+-    if pos.x.abs() >= pos.y.abs() {
+-        if pos.x > 0 {
+-            Vec2 { x: -1, y: 1 }
++    if we_are_not_farther_from_the_planet_along_y_axis(pos) {
++        if we_are_to_the_right_of_the_planet(pos) {
++            FLY_RIGHT_UP
+         } else {
+-            Vec2 { x: 1, y: -1 }
++            FLY_LEFT_DOWN
+         }
+     } else {
+-        if pos.y > 0 {
+-            Vec2 { x: -1, y: -1 }
++        if we_are_higher_than_the_planet(pos) {
++            FLY_RIGHT_DOWN
+         } else {
+-            Vec2 { x: 1, y: 1 }
++            FLY_LEFT_UP
+         }
+     }
+ }
+@@ -30,20 +76,9 @@ const HULL : usize = 3;
+ //                    fuel x1, laser x4, cooling x12, hull x2
+ const POINT_BUY : &[i128 ; 4] = &[ 1, 4, 12, 2 ];
+ 
+-pub fn scare_them_ship(max_cost : i128) -> ShipParams {
+-    // now let's split point buy so that we have at least 10
+-    let fuel = 20;
+-    let hull = 1;
+-    let cooling = 8;
+-    let rem_cost = max_cost - fuel - hull * POINT_BUY[HULL] - 0 - cooling * POINT_BUY[COOLING];
+-    let laser = rem_cost / POINT_BUY[LASER];
+-    let fuel_surplus = rem_cost % POINT_BUY[LASER];
+-    ShipParams { fuel, laser, cooling, hull }
+-}
+-
  pub fn orbit_tank(max_cost : i128) -> ShipParams {
      // now let's split point buy so that we have at least 10
--    let fuel = 10;
-+    let fuel0 = 10;
+-    let fuel0 = 10;
++    let fuel0 = 15;
      let hull = 1;
      let laser = 0;
--    let rem_cost = max_cost - fuel - hull * POINT_BUY[3] - 0;
-+    let rem_cost = max_cost - fuel0 - hull * POINT_BUY[3] - 0;
-     let cooling = rem_cost / POINT_BUY[2];
-     let fuel_surplus = rem_cost % POINT_BUY[2];
-+    let fuel = fuel0 + fuel_surplus;
+     let rem_cost = max_cost - fuel0 - hull * POINT_BUY[3] - 0;
+@@ -53,6 +88,22 @@ pub fn orbit_tank(max_cost : i128) -> ShipParams {
      ShipParams { fuel, laser, cooling, hull }
  }
  
-@@ -63,7 +80,7 @@ impl Ai for OrbitBot {
++pub fn away_from_the_center(our_ship : &Ship) -> Commands {
++    let thrust = Command::Accelerate {
++        ship_id: our_ship.ship_state.ship_id,
++        vector: acc(our_ship.ship_state.position),
++    };
++    Commands(vec![thrust])
++}
++
++pub fn towards_the_center(our_ship : &Ship) -> Commands {
++    let thrust = Command::Accelerate {
++        ship_id: our_ship.ship_state.ship_id,
++        vector: dec(our_ship.ship_state.position),
++    };
++    Commands(vec![thrust])
++}
++
+ impl Ai for OrbitBot {
+     fn choose_join_request(&mut self) -> JoinRequest {
+         JoinRequest { mystery: Data::Nil }
+@@ -61,6 +112,10 @@ impl Ai for OrbitBot {
+     // Plan is to fork as much as we can, giving a couple afterburners to each fork
+     // after we stand on orbit
+     fn initial_ship_params(&mut self, spec: &GameSpec) -> ShipParams {
++        //sniper_scarecrow(spec.bounds.max_cost)
++        //carrier_scarecrow(spec.bounds.max_cost)
++        //kamikaze_scarecrow(spec.bounds.max_cost)
++        //kamikaze_carrier_scarecrow(spec.bounds.max_cost)
+         orbit_tank(spec.bounds.max_cost)
+     }
+ 
+@@ -80,15 +135,18 @@ impl Ai for OrbitBot {
          let field = spec.field.as_ref().unwrap();
          let gravity = get_gravity(our_ship.ship_state.position);
  
--        let colision = predict_collisions(position, velocity, field.planet_radius, field.field_radius);
-+        let colision = predict_collisions(position, velocity, field);
-         if colision.collision.is_some() {
-             let thrust = Command::Accelerate {
-                 ship_id: our_ship.ship_state.ship_id,
+-        let colision = predict_collisions(position, velocity, field);
+-        if colision.collision.is_some() {
+-            let thrust = Command::Accelerate {
+-                ship_id: our_ship.ship_state.ship_id,
+-                vector: acc(our_ship.ship_state.position),
+-            };
+-            Commands(vec![thrust])
+-        } else {
+-            Commands(vec![])
++        let collision = predict_collisions(position, velocity, field);
++        /*
++        if collision.collision.is_some() && collision.fly_off.is_some() {
++            return squeeze_out(&our_ship, collision.collision.unwrap(), collision.fly_off.unwrap());
++        }
++        */
++        if collision.collision.is_some() {
++            return away_from_the_center(&our_ship);
++        }
++        if collision.collision.is_some() {
++            return towards_the_center(&our_ship);
+         }
++        Commands(vec![])
+     }
+ }
