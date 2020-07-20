@@ -3,10 +3,10 @@ cargo build -p tbd --bin trident --release
 
 
 ### Base commit
-3ef3477
-Sane replay instructions
-Vlad Shcherbina
-Mon Jul 20 14:59:33 2020 +0300
+467faeb
+best_shot
+Fj
+Mon Jul 20 15:47:48 2020 +0300
 
 
 ### Local changes on top of this base commit
