@@ -12,7 +12,7 @@ Mon Jul 20 06:54:50 2020 +0300
 ### Local changes on top of this base commit
 
 diff --git a/scratches/manpages/src/simple_ai.rs b/scratches/manpages/src/simple_ai.rs
-index dcc8905..6bfd5fb 100644
+index dcc8905..db8e5e1 100644
 --- a/scratches/manpages/src/simple_ai.rs
 +++ b/scratches/manpages/src/simple_ai.rs
 @@ -1,23 +1,93 @@
@@ -163,7 +163,7 @@ index dcc8905..6bfd5fb 100644
  impl Ai for OrbitBot {
      fn choose_join_request(&mut self) -> JoinRequest {
 -        JoinRequest { mystery: Data::Nil }
-+        let join = Data::make_list1( 103652820);
++        let join = Data::make_list2( 103652820, 192496425430);
 +        JoinRequest { mystery: join }
      }
  
