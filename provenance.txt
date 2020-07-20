@@ -3,18 +3,11 @@ cargo build -p julie --bin shooting_player --release
 
 
 ### Base commit
-b7f9a43
-calculate ship hp
+e9169e3
+rudimental shooter - correct params
 caudate_julie
-Mon Jul 20 13:47:00 2020 +0300
+Mon Jul 20 14:38:22 2020 +0300
 
 
 ### Local changes on top of this base commit
 
-diff --git a/scratches/julie/src/lib.rs b/scratches/julie/src/lib.rs
-index 5cf549a..4878605 100644
---- a/scratches/julie/src/lib.rs
-+++ b/scratches/julie/src/lib.rs
-@@ -1 +1,2 @@
- pub mod predicting_ai;
-+pub mod shooting_bot;
