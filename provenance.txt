@@ -29,7 +29,7 @@ index 8771b3b..2c71897 100644
          run_bots_local(PredictingAi {}, PredictingAi {});
      }
 diff --git a/scratches/julie/src/bin/scarecrow_players.rs b/scratches/julie/src/bin/scarecrow_players.rs
-index 38d872e..f1b79cc 100644
+index 38d872e..59bcb6d 100644
 --- a/scratches/julie/src/bin/scarecrow_players.rs
 +++ b/scratches/julie/src/bin/scarecrow_players.rs
 @@ -1,6 +1,7 @@
@@ -55,11 +55,11 @@ index 38d872e..f1b79cc 100644
  fn main() {
      if tbd::is_running_in_submission() {
 -        run_in_submission(ScarecrowBot {t: ScarecrowType::Sniper});
+-        run_in_submission(ScarecrowBot {t: ScarecrowType::Carrier});
 +        // run_in_submission(ScarecrowBot {t: ScarecrowType::Sniper});
-         run_in_submission(ScarecrowBot {t: ScarecrowType::Carrier});
--        run_in_submission(ScarecrowBot {t: ScarecrowType::Kamikaze});
++        // run_in_submission(ScarecrowBot {t: ScarecrowType::Carrier});
+         run_in_submission(ScarecrowBot {t: ScarecrowType::Kamikaze});
 -        run_in_submission(ScarecrowBot {t: ScarecrowType::KamikazeCrew});
-+        // run_in_submission(ScarecrowBot {t: ScarecrowType::Kamikaze});
 +        // run_in_submission(ScarecrowBot {t: ScarecrowType::KamikazeCrew});
      } else {
          run_bots_local(
