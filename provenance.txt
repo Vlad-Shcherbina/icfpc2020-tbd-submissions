@@ -1,12 +1,12 @@
 ### Binary
-cargo build -p earthdok --bin simple_player --release
+cargo build -p earthdok --bin bee_fighter --release
 
 
 ### Base commit
-b2da85c
-fix thrust
+679b147
+rudimentary pew pew
 Sergey Matveev
-Sun Jul 19 17:47:24 2020 +0300
+Mon Jul 20 14:32:32 2020 +0300
 
 
 ### Local changes on top of this base commit
