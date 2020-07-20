@@ -3,10 +3,10 @@ cargo build -p manpages --bin not_forking_yet --release
 
 
 ### Base commit
-d93808d
-extend uforest with applied ship commands
+ea6bb69
+uforest - gamespec infos
 Ilona
-Mon Jul 20 03:13:53 2020 +0200
+Mon Jul 20 04:40:17 2020 +0200
 
 
 ### Local changes on top of this base commit
