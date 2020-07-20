@@ -1,12 +1,12 @@
 ### Binary
-cargo build -p tbd --bin example_submission --release
+cargo build -p julie --bin predicting_player --release
 
 
 ### Base commit
-5f0c395
-Fix CRLF in repository key
+2b6f3f9
+Rename
 Vlad Shcherbina
-Fri Jul 17 16:04:13 2020 +0300
+Mon Jul 20 03:10:52 2020 +0300
 
 
 ### Local changes on top of this base commit
