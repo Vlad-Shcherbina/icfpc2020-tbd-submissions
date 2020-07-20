@@ -3,80 +3,162 @@ cargo build -p pavel --bin player --release
 
 
 ### Base commit
-94ea272
-add moar type infos
-Ilona
-Sun Jul 19 14:54:33 2020 +0200
+bd1715d
+instruction for local bot runner
+Pavel Sergeev
+Mon Jul 20 02:09:11 2020 +0300
 
 
 ### Local changes on top of this base commit
 
-diff --git a/scratches/pavel/src/bin/player.rs b/scratches/pavel/src/bin/player.rs
+diff --git a/scratches/pavel/src/bin/local_bot_runner.rs b/scratches/pavel/src/bin/local_bot_runner.rs
 new file mode 100644
-index 0000000..a0488be
+index 0000000..3be9ec4
 --- /dev/null
++++ b/scratches/pavel/src/bin/local_bot_runner.rs
+@@ -0,0 +1,6 @@
++use tbd::local_bot_runner::run_bots;
++use pavel::simple_ai;
++
++fn main() {
++    run_bots(simple_ai::OrbitBot {}, simple_ai::OrbitBot {});
++}
+\ No newline at end of file
+diff --git a/scratches/pavel/src/bin/player.rs b/scratches/pavel/src/bin/player.rs
+index 064eae3..56ff03f 100644
+--- a/scratches/pavel/src/bin/player.rs
 +++ b/scratches/pavel/src/bin/player.rs
-@@ -0,0 +1,48 @@
-+// Minimal player example. It can be used as a submission.
-+// Feel free to copy this and create your own bot.
+@@ -3,47 +3,9 @@
+ 
+ use tbd::uforest::*;
+ use tbd::ai_interface::Ai;
+-use tbd::uforest::Command::Accelerate;
+-use tbd::local_bot_runner::run_bots;
++use pavel::simple_ai;
+ 
+-pub struct MyAi {}
+-
+-impl Ai for MyAi {
+-    fn choose_join_request(&mut self) -> JoinRequest {
+-        JoinRequest { mystery: Data::Nil }
+-    }
+-
+-    fn initial_ship_params(&mut self, _spec: &GameSpec) -> ShipParams {
+-        ShipParams {
+-            fuel: 1,
+-            laser: 1,
+-            cooling: 1,
+-            hull: 1,
+-        }
+-    }
+-
+-    fn choose_commands(&mut self, _spec: &GameSpec, state: &GameState) -> Commands {
+-        let ship = state.ships_list.iter()
+-            .find(|ship| ship.ship_state.ship_id == 0)
+-            .expect("No 0 ship_id");
+-        let acc_x = if ship.ship_state.position.x > 0 {
+-            -1
+-        } else if ship.ship_state.position.x == 0 {
+-            0
+-        } else {
+-            1
+-        };
+-        let acc_y = if ship.ship_state.position.y > 0 {
+-            -1
+-        } else if ship.ship_state.position.y == 0 {
+-            0
+-        } else {
+-            1
+-        };
+-        Commands(vec![Accelerate { ship_id: 0, vector: Vec2 { x: acc_x, y: acc_y } }])
+-    }
+-}
+ 
+ fn main() {
+-    run_bots(MyAi {}, MyAi {});
++    tbd::runners::run_in_submission(simple_ai::OrbitBot {});
+ }
+diff --git a/scratches/pavel/src/lib.rs b/scratches/pavel/src/lib.rs
+index 5173a2a..84a7570 100644
+--- a/scratches/pavel/src/lib.rs
++++ b/scratches/pavel/src/lib.rs
+@@ -1,4 +1,6 @@
+ use std::convert::TryInto;
++pub mod simple_ai;
 +
-+use tbd::uforest::*;
+ 
+ fn squiggle_from_string(s: &str) -> Vec<u8> {
+     s.chars().map(|c| c.to_digit(10).unwrap().try_into().unwrap()).collect()
+diff --git a/scratches/pavel/src/simple_ai.rs b/scratches/pavel/src/simple_ai.rs
+new file mode 100644
+index 0000000..c03f34b
+--- /dev/null
++++ b/scratches/pavel/src/simple_ai.rs
+@@ -0,0 +1,66 @@
 +use tbd::ai_interface::Ai;
-+use tbd::uforest::Command::Accelerate;
++use tbd::uforest::{JoinRequest, ShipParams, GameSpec, Data, GameState, Commands, Role, Command};
++use tbd::bot_util::{ships_by_role, get_gravity, predict_collisions};
++use tbd::vec2::Vec2;
 +
-+pub struct ExampleAi {}
++pub struct OrbitBot {}
 +
-+impl Ai for ExampleAi {
++pub fn acc(pos: Vec2) -> Vec2 {
++    // TODO: what happens at abs(x) == abs(y)??
++    if pos.x.abs() >= pos.y.abs() {
++        if pos.x > 0 {
++            Vec2 { x: -1, y: 1 }
++        } else {
++            Vec2 { x: 1, y: -1 }
++        }
++    } else {
++        if pos.y > 0 {
++            Vec2 { x: -1, y: -1 }
++        } else {
++            Vec2 { x: 1, y: 1 }
++        }
++    }
++}
++
++impl Ai for OrbitBot {
 +    fn choose_join_request(&mut self) -> JoinRequest {
 +        JoinRequest { mystery: Data::Nil }
 +    }
 +
 +    fn initial_ship_params(&mut self, _spec: &GameSpec) -> ShipParams {
 +        ShipParams {
-+            fuel: 1,
-+            laser: 1,
-+            bars: 1,
++            fuel: 254,
++            laser: 0,
++            cooling: 16,
 +            hull: 1,
 +        }
 +    }
 +
-+    fn choose_commands(&mut self, _spec: &GameSpec, state: &GameState) -> Commands {
-+        let ship = state.ships_list.iter()
-+            .find(|ship| ship.ship_state.ship_id == 0)
-+            .expect("No 0 ship_id");
-+        let acc_x = if ship.ship_state.position.x > 0 {
-+            -1
-+        } else if ship.ship_state.position.x == 0 {
-+            0
++    fn choose_commands(&mut self, spec: &GameSpec, _state: &GameState) -> Commands {
++        let our_role = spec.role;
++        let their_role = if our_role == Role::Attacker {
++            Role::Defender
 +        } else {
-+            1
++            Role::Attacker
 +        };
-+        let acc_y = if ship.ship_state.position.y > 0 {
-+            -1
-+        } else if ship.ship_state.position.y == 0 {
-+            0
++
++        let our_ship = ships_by_role(_state, our_role).next().unwrap();
++        let their_ship = ships_by_role(_state, their_role).next().unwrap();
++
++        let position = our_ship.ship_state.position;
++        let velocity = our_ship.ship_state.velocity;
++        let field = spec.field.as_ref().unwrap();
++        let gravity = get_gravity(our_ship.ship_state.position);
++
++        let colision = predict_collisions(position, velocity, field.planet_radius, field.field_radius);
++        if colision.collision.is_some() {
++            let thrust = Command::Accelerate {
++                ship_id: our_ship.ship_state.ship_id,
++                vector: acc(our_ship.ship_state.position),
++            };
++            Commands(vec![thrust])
 +        } else {
-+            1
-+        };
-+        Commands(vec![Accelerate { ship_id: 0, vector: Vec2 { x: acc_x, y: acc_y } }])
++            Commands(vec![])
++        }
 +    }
 +}
-+
-+fn main() {
-+    tbd::runners::run_in_submission(ExampleAi {} );
-+}
-diff --git a/src/uforest.rs b/src/uforest.rs
-index 2750c88..18b6d83 100644
---- a/src/uforest.rs
-+++ b/src/uforest.rs
-@@ -21,8 +21,8 @@ pub enum Role {
- 
- #[derive(Debug, Clone, PartialEq)]
- pub struct Vec2 {
--    x: i128,
--    y: i128,
-+    pub x: i128,
-+    pub y: i128,
- }
- 
- #[derive(Debug)]
+\ No newline at end of file
