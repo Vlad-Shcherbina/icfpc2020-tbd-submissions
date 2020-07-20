@@ -12,7 +12,7 @@ Mon Jul 20 06:54:50 2020 +0300
 ### Local changes on top of this base commit
 
 diff --git a/scratches/manpages/src/simple_ai.rs b/scratches/manpages/src/simple_ai.rs
-index dcc8905..8f29421 100644
+index dcc8905..b214913 100644
 --- a/scratches/manpages/src/simple_ai.rs
 +++ b/scratches/manpages/src/simple_ai.rs
 @@ -1,23 +1,73 @@
@@ -116,7 +116,7 @@ index dcc8905..8f29421 100644
  pub fn orbit_tank(max_cost : i128) -> ShipParams {
      // now let's split point buy so that we have at least 10
 -    let fuel0 = 10;
-+    let fuel0 = 100;
++    let fuel0 = 20;
      let hull = 1;
      let laser = 0;
      let rem_cost = max_cost - fuel0 - hull * POINT_BUY[3] - 0;
