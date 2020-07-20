@@ -12,10 +12,10 @@ Mon Jul 20 06:54:50 2020 +0300
 ### Local changes on top of this base commit
 
 diff --git a/scratches/manpages/src/simple_ai.rs b/scratches/manpages/src/simple_ai.rs
-index dcc8905..a74f46a 100644
+index dcc8905..8f29421 100644
 --- a/scratches/manpages/src/simple_ai.rs
 +++ b/scratches/manpages/src/simple_ai.rs
-@@ -1,23 +1,69 @@
+@@ -1,23 +1,73 @@
  use tbd::ai_interface::Ai;
 -use tbd::uforest::{JoinRequest, ShipParams, GameSpec, Data, GameState, Commands, Role, Command};
 +use tbd::uforest::{JoinRequest, ShipParams, GameSpec, Data, GameState, Commands, Role, Command, Ship};
@@ -55,19 +55,19 @@ index dcc8905..a74f46a 100644
 +
 +pub fn acc(pos: Vec2) -> Vec2 { // Accelerate away from the center
 +    match (we_are_to_the_right_of_the_planet(pos), we_are_higher_than_the_planet(pos)) {
-+        (true, true) => FLY_RIGHT_UP,
-+        (true, false) => FLY_RIGHT_DOWN,
-+        (false, true) => FLY_LEFT_UP,
-+        (false, flase) => FLY_LEFT_DOWN,
++        (true, true) => FLY_RIGHT_DOWN,
++        (true, false) => FLY_LEFT_DOWN,
++        (false, flase) => FLY_LEFT_UP,
++        (false, true) => FLY_RIGHT_UP,
 +    }
 +}
 +
 +pub fn dec(pos: Vec2) -> Vec2 { // Decelerate away from the walls
 +    match (we_are_to_the_right_of_the_planet(pos), we_are_higher_than_the_planet(pos)) {
-+        (true, true) => FLY_LEFT_DOWN,
-+        (true, false) => FLY_LEFT_UP,
++        (true, true) => FLY_LEFT_UP,
++        (true, false) => FLY_RIGHT_UP,
 +        (false, true) => FLY_RIGHT_DOWN,
-+        (false, flase) => FLY_RIGHT_UP,
++        (false, flase) => FLY_LEFT_DOWN,
 +    }
 +}
 +
@@ -76,6 +76,10 @@ index dcc8905..a74f46a 100644
 -    if pos.x.abs() >= pos.y.abs() {
 -        if pos.x > 0 {
 -            Vec2 { x: -1, y: 1 }
++    // | x | >= | y |
++    //
++    // ------------x
++    //             |
 +    if we_are_not_farther_from_the_planet_along_y_axis(pos) {
 +        if we_are_to_the_right_of_the_planet(pos) {
 +            FLY_RIGHT_UP
@@ -94,7 +98,7 @@ index dcc8905..a74f46a 100644
          }
      }
  }
-@@ -30,20 +76,9 @@ const HULL : usize = 3;
+@@ -30,20 +80,9 @@ const HULL : usize = 3;
  //                    fuel x1, laser x4, cooling x12, hull x2
  const POINT_BUY : &[i128 ; 4] = &[ 1, 4, 12, 2 ];
  
@@ -116,7 +120,7 @@ index dcc8905..a74f46a 100644
      let hull = 1;
      let laser = 0;
      let rem_cost = max_cost - fuel0 - hull * POINT_BUY[3] - 0;
-@@ -53,6 +88,22 @@ pub fn orbit_tank(max_cost : i128) -> ShipParams {
+@@ -53,6 +92,22 @@ pub fn orbit_tank(max_cost : i128) -> ShipParams {
      ShipParams { fuel, laser, cooling, hull }
  }
  
@@ -139,7 +143,7 @@ index dcc8905..a74f46a 100644
  impl Ai for OrbitBot {
      fn choose_join_request(&mut self) -> JoinRequest {
          JoinRequest { mystery: Data::Nil }
-@@ -61,6 +112,10 @@ impl Ai for OrbitBot {
+@@ -61,6 +116,10 @@ impl Ai for OrbitBot {
      // Plan is to fork as much as we can, giving a couple afterburners to each fork
      // after we stand on orbit
      fn initial_ship_params(&mut self, spec: &GameSpec) -> ShipParams {
@@ -150,7 +154,7 @@ index dcc8905..a74f46a 100644
          orbit_tank(spec.bounds.max_cost)
      }
  
-@@ -80,15 +135,18 @@ impl Ai for OrbitBot {
+@@ -80,15 +139,18 @@ impl Ai for OrbitBot {
          let field = spec.field.as_ref().unwrap();
          let gravity = get_gravity(our_ship.ship_state.position);
  
