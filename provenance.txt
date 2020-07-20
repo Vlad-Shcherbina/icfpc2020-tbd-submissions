@@ -3,10 +3,10 @@ cargo build -p ix --bin forkbomb_player --release
 
 
 ### Base commit
-34ed9e4
-to fork you have to have more than 1 hull, gee
+8e1818b
+fix stuff broken by ships_by_role
 Ilona
-Mon Jul 20 11:58:54 2020 +0200
+Mon Jul 20 12:48:11 2020 +0200
 
 
 ### Local changes on top of this base commit
