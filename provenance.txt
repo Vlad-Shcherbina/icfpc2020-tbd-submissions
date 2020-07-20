@@ -1,12 +1,12 @@
 ### Binary
-cargo build -p ix --bin forkbomb_player --release
+cargo build -p tbd --bin forkbomb_player --release
 
 
 ### Base commit
-8e1818b
-fix stuff broken by ships_by_role
+280bb86
+hasty fork bot
 Ilona
-Mon Jul 20 12:48:11 2020 +0200
+Mon Jul 20 14:50:54 2020 +0200
 
 
 ### Local changes on top of this base commit
