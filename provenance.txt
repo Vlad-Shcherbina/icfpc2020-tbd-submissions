@@ -1,12 +1,12 @@
 ### Binary
-cargo build -p julie --bin predicting_player --release
+cargo build -p julie --bin scarecrow_players --release
 
 
 ### Base commit
-2b6f3f9
-Rename
-Vlad Shcherbina
-Mon Jul 20 03:10:52 2020 +0300
+54b9088
+scarecrow bots
+caudate_julie
+Mon Jul 20 10:18:07 2020 +0300
 
 
 ### Local changes on top of this base commit
