@@ -3,33 +3,11 @@ cargo build -p ix --bin forkbomb_player --release
 
 
 ### Base commit
-395d1b2
-conform forkbot to beelib, add some bot util
+34ed9e4
+to fork you have to have more than 1 hull, gee
 Ilona
-Mon Jul 20 11:34:52 2020 +0200
+Mon Jul 20 11:58:54 2020 +0200
 
 
 ### Local changes on top of this base commit
 
-diff --git a/scratches/ix/src/bin/forkbomb_player.rs b/scratches/ix/src/bin/forkbomb_player.rs
-index b0a9012..b0c9d14 100644
---- a/scratches/ix/src/bin/forkbomb_player.rs
-+++ b/scratches/ix/src/bin/forkbomb_player.rs
-@@ -2,7 +2,7 @@ use tbd::runners::{run_bots_local, run_in_submission};
- use tbd::ai_interface::Ai;
- use tbd::uforest::*;
- use tbd::bot_util::*;
--use tbd::bee_player_lib::compute_acceleration;
-+use tbd::bee_player_lib::compute_thrust;
- 
- pub struct BeeFork {}
- 
-@@ -47,7 +47,7 @@ impl Ai for BeeFork {
-             let params = &ship.ship_state.ship_params;
-             if params.fuel > 8 && params.hull > 1 {
-                 commands.push(Command::Fork {
--                    ship_id: s.ship_id,
-+                    ship_id: ship.ship_state.ship_id,
-                     new_ship_params: fork_params(params),
-                 });
-             };
